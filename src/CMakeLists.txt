@@ -10,9 +10,15 @@ file(GLOB_RECURSE SRCS
     "*/*.cpp"
 )
 
-qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
-qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
-qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
+if(QT_VERSION_MAJOR EQUAL "5")
+    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
+    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
+    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
+else()
+    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
+    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
+    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
+endif()
 
 message(${DBUS_FILES})
 
@@ -30,7 +36,7 @@ set_target_properties(${BIN_NAME} PROPERTIES
 
 target_compile_definitions(${BIN_NAME} PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 
-find_package(DtkCore REQUIRED)
+find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED Core)
 find_package(PkgConfig REQUIRED)
 target_include_directories(${BIN_NAME} PUBLIC
     Qt${QT_VERSION_MAJOR}::Core
@@ -38,7 +44,7 @@ target_include_directories(${BIN_NAME} PUBLIC
 
 target_link_libraries(${BIN_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
-    Dtk::Core
+    Dtk${DTK_VERSION_MAJOR}::Core
 )
 
 install(FILES ${INCLUDE_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${BIN_NAME})

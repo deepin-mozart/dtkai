@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <QScopedPointer>
+#include <QVariant>
 
 #include <DError>
 
