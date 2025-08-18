@@ -11,13 +11,15 @@ file(GLOB_RECURSE SRCS
 )
 
 if(QT_VERSION_MAJOR EQUAL "5")
-    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
+    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.sessionmanager.xml aidaemon_sessionmanager)
     qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
     qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
+    qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.modelinfo.xml aidaemon_modelinfo)
 else()
-    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
+    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.sessionmanager.xml aidaemon_sessionmanager)
     qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
     qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
+    qt_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.modelinfo.xml aidaemon_modelinfo)
 endif()
 
 message(${DBUS_FILES})

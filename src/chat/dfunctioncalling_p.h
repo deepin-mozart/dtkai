@@ -22,7 +22,8 @@ public:
     QMutex mtx;
     bool running = false;
     DTK_CORE_NAMESPACE::DError error;
-    QScopedPointer<OrgDeepinAiDaemonAPISessionFunctionCallingInterface> funcIfs;
+    QScopedPointer<OrgDeepinAiDaemonSessionFunctionCallingInterface> funcIfs;
+    QString sessionId;
 public:
     DFunctionCalling *q = nullptr;
 };
