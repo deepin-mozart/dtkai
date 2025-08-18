@@ -16,15 +16,10 @@ int main(int argc, char *argv[])
 
     DChatCompletions chat;
 
-    QString response;
-
-
     QList<ChatHistory> historys;
     std::string prompt;
 
     for (;;) {
-        response.clear();
-
         std::cout << "question:\n";
         std::getline(std::cin, prompt);
 
@@ -51,7 +46,7 @@ int main(int argc, char *argv[])
         historys.append(line);
 
         line.role = kChatRoleAssistant;
-        line.content = response;
+        line.content = output;
         historys.append(line);
 
         std::cout << "\n----------\n";

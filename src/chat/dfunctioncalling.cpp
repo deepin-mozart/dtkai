@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "dfunctioncalling_p.h"
-#include "aidaemon_apiserver.h"
+#include "aidaemon_sessionmanager.h"
 #include "dtkaierror.h"
 
 #include <QMutexLocker>
@@ -22,11 +22,11 @@ DFunctionCallingPrivate::DFunctionCallingPrivate(DFunctionCalling *parent) : q(p
 
 DFunctionCallingPrivate::~DFunctionCallingPrivate()
 {
-    if (!funcIfs.isNull()) {
-        OrgDeepinAiDaemonAPIServerInterface server(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(),
-                                                   "/org/deepin/ai/daemon/APIServer", QDBusConnection::sessionBus());
-        if (server.isValid())
-            server.DestorySession(funcIfs->path());
+    if (!funcIfs.isNull() && !sessionId.isEmpty()) {
+        OrgDeepinAiDaemonSessionManagerInterface sessionManager(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(),
+                                                                "/org/deepin/ai/daemon/SessionManager", QDBusConnection::sessionBus());
+        if (sessionManager.isValid())
+            sessionManager.DestroySession(sessionId);
 
         funcIfs.reset(nullptr);
     }
@@ -36,16 +36,17 @@ bool DFunctionCallingPrivate::ensureServer()
 {
     if (funcIfs.isNull() || !funcIfs->isValid()) {
         QDBusConnection con = QDBusConnection::sessionBus();
-        OrgDeepinAiDaemonAPIServerInterface server(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(),
-                                                   "/org/deepin/ai/daemon/APIServer", con);
-        if (!server.isValid())
+        OrgDeepinAiDaemonSessionManagerInterface sessionManager(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(),
+                                                                "/org/deepin/ai/daemon/SessionManager", con);
+        if (!sessionManager.isValid())
             return false;
 
-        QString path = server.CreateSession("function_calling");
-        if (path.isEmpty())
+        sessionId = sessionManager.CreateSession("FunctionCalling");
+        if (sessionId.isEmpty())
             return false;
 
-        funcIfs.reset(new OrgDeepinAiDaemonAPISessionFunctionCallingInterface(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(), path, con));
+        QString sessionPath = QString("/org/deepin/ai/daemon/Session/%1").arg(sessionId);
+        funcIfs.reset(new OrgDeepinAiDaemonSessionFunctionCallingInterface(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(), sessionPath, con));
         funcIfs->setTimeout(REQ_TIMEOUT);
     }
 

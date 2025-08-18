@@ -22,8 +22,18 @@ add_executable(
 )
 
 add_executable(
+    chat_enhanced
+    chat_enhanced.cpp
+)
+
+add_executable(
     functioncalling
     functioncalling.cpp
+)
+
+add_executable(
+    model_info_test
+    model_info_test.cpp
 )
 
 target_link_libraries(
@@ -39,7 +49,19 @@ target_link_libraries(
 )
 
 target_link_libraries(
+    chat_enhanced PRIVATE
+    ${DtkCore_LIBRARIES}
+    dtkai
+)
+
+target_link_libraries(
     functioncalling PRIVATE
+    ${DtkCore_LIBRARIES}
+    dtkai
+)
+
+target_link_libraries(
+    model_info_test PRIVATE
     ${DtkCore_LIBRARIES}
     dtkai
 )

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "dchatcompletions_p.h"
-#include "aidaemon_apiserver.h"
+#include "aidaemon_sessionmanager.h"
 #include "dtkaierror.h"
 
 #include <QMutexLocker>
@@ -24,11 +24,11 @@ DChatCompletionsPrivate::DChatCompletionsPrivate(DChatCompletions *parent)
 
 DChatCompletionsPrivate::~DChatCompletionsPrivate()
 {
-    if (!chatIfs.isNull()) {
-        OrgDeepinAiDaemonAPIServerInterface server(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(),
-                                                   "/org/deepin/ai/daemon/APIServer", QDBusConnection::sessionBus());
-        if (server.isValid())
-            server.DestorySession(chatIfs->path());
+    if (!chatIfs.isNull() && !sessionId.isEmpty()) {
+        OrgDeepinAiDaemonSessionManagerInterface sessionManager(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(),
+                                                                "/org/deepin/ai/daemon/SessionManager", QDBusConnection::sessionBus());
+        if (sessionManager.isValid())
+            sessionManager.DestroySession(sessionId);
 
         chatIfs.reset(nullptr);
     }
@@ -38,19 +38,20 @@ bool DChatCompletionsPrivate::ensureServer()
 {
     if (chatIfs.isNull() || !chatIfs->isValid()) {
         QDBusConnection con = QDBusConnection::sessionBus();
-        OrgDeepinAiDaemonAPIServerInterface server(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(),
-                                                   "/org/deepin/ai/daemon/APIServer", con);
-        if (!server.isValid())
+        OrgDeepinAiDaemonSessionManagerInterface sessionManager(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(),
+                                                                "/org/deepin/ai/daemon/SessionManager", con);
+        if (!sessionManager.isValid())
             return false;
 
-        QString path = server.CreateSession("chat");
-        if (path.isEmpty())
+        sessionId = sessionManager.CreateSession("Chat");
+        if (sessionId.isEmpty())
             return false;
 
-        chatIfs.reset(new OrgDeepinAiDaemonAPISessionChatInterface(OrgDeepinAiDaemonAPIServerInterface::staticInterfaceName(), path, con));
+        QString sessionPath = QString("/org/deepin/ai/daemon/Session/%1").arg(sessionId);
+        chatIfs.reset(new OrgDeepinAiDaemonSessionChatInterface(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(), sessionPath, con));
         chatIfs->setTimeout(REQ_TIMEOUT);
-        q->connect(chatIfs.data(), &OrgDeepinAiDaemonAPISessionChatInterface::StreamOutput, q, &DChatCompletions::streamOutput);
-        q->connect(chatIfs.data(), &OrgDeepinAiDaemonAPISessionChatInterface::StreamFinished, this, &DChatCompletionsPrivate::finished);
+        q->connect(chatIfs.data(), &OrgDeepinAiDaemonSessionChatInterface::StreamOutput, q, &DChatCompletions::streamOutput);
+        q->connect(chatIfs.data(), &OrgDeepinAiDaemonSessionChatInterface::StreamFinished, this, &DChatCompletionsPrivate::finished);
     }
 
     return chatIfs->isValid();
@@ -60,6 +61,7 @@ QString DChatCompletionsPrivate::packageParams(const QList<ChatHistory> &history
 {
     QVariantHash root;
 
+    // Add chat history to messages
     QVariantList msgs;
     for (const ChatHistory &chat : history) {
         QVariantHash obj;
@@ -67,8 +69,13 @@ QString DChatCompletionsPrivate::packageParams(const QList<ChatHistory> &history
         obj.insert("content", chat.content);
         msgs.append(obj);
     }
-
     root.insert("messages", msgs);
+    
+    // Merge user-provided parameters (including model, temperature, etc.)
+    for (auto it = params.begin(); it != params.end(); ++it) {
+        root.insert(it.key(), it.value());
+    }
+
     QString ret = QString::fromUtf8(QJsonDocument::fromVariant(root).toJson(QJsonDocument::Compact));
     return ret;
 }

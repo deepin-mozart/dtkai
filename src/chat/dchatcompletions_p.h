@@ -24,7 +24,8 @@ public:
     QMutex mtx;
     bool running = false;
     DTK_CORE_NAMESPACE::DError error;
-    QScopedPointer<OrgDeepinAiDaemonAPISessionChatInterface> chatIfs;
+    QScopedPointer<OrgDeepinAiDaemonSessionChatInterface> chatIfs;
+    QString sessionId;
 public:
     DChatCompletions *q = nullptr;
 };
