@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(chat VERSION 1.0 LANGUAGES CXX)
+project(nlp_examples VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
@@ -8,32 +8,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core REQUIRED)
-find_package(Dtk${DTK_VERSION_MAJOR} COMPONENTS Core REQUIRED)
-#find_package(dtkai REQUIRED)
+find_package(Dtk COMPONENTS Core REQUIRED)
 
+# Basic chat functionality
 add_executable(
     chat
     chat.cpp
-)
-
-add_executable(
-    chat_stream
-    chat_stream.cpp
-)
-
-add_executable(
-    chat_enhanced
-    chat_enhanced.cpp
-)
-
-add_executable(
-    functioncalling
-    functioncalling.cpp
-)
-
-add_executable(
-    model_info_test
-    model_info_test.cpp
 )
 
 target_link_libraries(
@@ -42,10 +22,22 @@ target_link_libraries(
     dtkai
 )
 
+# Streaming chat functionality
+add_executable(
+    chat_stream
+    chat_stream.cpp
+)
+
 target_link_libraries(
     chat_stream PRIVATE
     ${DtkCore_LIBRARIES}
     dtkai
+)
+
+# Enhanced chat functionality
+add_executable(
+    chat_enhanced
+    chat_enhanced.cpp
 )
 
 target_link_libraries(
@@ -54,14 +46,14 @@ target_link_libraries(
     dtkai
 )
 
-target_link_libraries(
-    functioncalling PRIVATE
-    ${DtkCore_LIBRARIES}
-    dtkai
+# Function calling functionality
+add_executable(
+    functioncalling
+    functioncalling.cpp
 )
 
 target_link_libraries(
-    model_info_test PRIVATE
+    functioncalling PRIVATE
     ${DtkCore_LIBRARIES}
     dtkai
 )

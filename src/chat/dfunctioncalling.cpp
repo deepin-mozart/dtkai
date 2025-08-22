@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
 //
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "dfunctioncalling_p.h"
 #include "aidaemon_sessionmanager.h"
-#include "dtkaierror.h"
+#include "daierror.h"
 
 #include <QMutexLocker>
 #include <QJsonDocument>

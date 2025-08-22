@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
 //
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #ifndef DFUNCTIONCALLING_H
 #define DFUNCTIONCALLING_H
-
-#include <QObject>
-#include <QScopedPointer>
 
 #include <DError>
 
 #include "dtkai_global.h"
 #include "dtkaitypes.h"
+
+#include <QObject>
+#include <QScopedPointer>
 
 DAI_BEGIN_NAMESPACE
 

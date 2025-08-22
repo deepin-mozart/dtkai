@@ -1,16 +1,15 @@
 // SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
 //
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-#include <iostream>
-
-#include <QCoreApplication>
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include <DFunctionCalling>
 
+#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QProcess>
+
+#include <iostream>
 
 DAI_USE_NAMESPACE
 const char *functionList= R"(

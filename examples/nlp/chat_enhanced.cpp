@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include <DChatCompletions>
+#include <DModelManager>
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QTimer>
-
-#include <DChatCompletions>
-#include <DModelManager>
 
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE

@@ -43,6 +43,11 @@ Files: .github/* .gitignore
 Copyright: None
 License: CC0-1.0
 
+# Assets and images
+Files: assets/images/tests/*
+Copyright: UnionTech Software Technology Co., Ltd.
+License: CC0-1.0
+
 Files: 3rdparty/aidaemon/* include/dtkai/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
