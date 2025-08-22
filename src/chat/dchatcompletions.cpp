@@ -4,7 +4,7 @@
 
 #include "dchatcompletions_p.h"
 #include "aidaemon_sessionmanager.h"
-#include "dtkaierror.h"
+#include "daierror.h"
 
 #include <QMutexLocker>
 #include <QJsonDocument>
@@ -117,7 +117,7 @@ bool DChatCompletions::chatStream(const QString &prompt, const QList<ChatHistory
     d->running = true;
     lk.unlock();
 
-    d->chatIfs->StreamChat(prompt, d->packageParams(history, params));
+    d->chatIfs->streamChat(prompt, d->packageParams(history, params));
     return true;
 }
 
@@ -136,7 +136,7 @@ QString DChatCompletions::chat(const QString &prompt, const QList<ChatHistory> &
     lk.unlock();
 
     d->chatIfs->setTimeout(CHAT_TIMEOUT);
-    QString ret = d->chatIfs->Chat(prompt, d->packageParams(history, params));
+    QString ret = d->chatIfs->chat(prompt, d->packageParams(history, params));
     d->chatIfs->setTimeout(REQ_TIMEOUT);
     {
         QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8());
@@ -157,7 +157,7 @@ QString DChatCompletions::chat(const QString &prompt, const QList<ChatHistory> &
 void DChatCompletions::terminate()
 {
     if (d->chatIfs)
-        d->chatIfs->Terminate();
+        d->chatIfs->terminate();
 }
 
 DError DChatCompletions::lastError() const

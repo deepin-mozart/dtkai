@@ -5,14 +5,14 @@
 #ifndef DCHATCOMPLETIONS_H
 #define DCHATCOMPLETIONS_H
 
-#include <QObject>
-#include <QScopedPointer>
-#include <QVariant>
-
 #include <DError>
 
 #include "dtkai_global.h"
 #include "dtkaitypes.h"
+
+#include <QObject>
+#include <QScopedPointer>
+#include <QVariant>
 
 DAI_BEGIN_NAMESPACE
 class DChatCompletionsPrivate;

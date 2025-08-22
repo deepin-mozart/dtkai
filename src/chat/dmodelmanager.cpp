@@ -30,51 +30,6 @@ namespace {
         return interface;
     }
 
-    // Helper function to convert JSON string to ModelInfo list
-    QList<ModelInfo> parseModelsFromJson(const QString &jsonStr) {
-        QList<ModelInfo> models;
-
-        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
-        if (!doc.isObject()) {
-            qCWarning(dtkaiModelManager) << "Invalid JSON response from daemon";
-            return models;
-        }
-
-        QJsonObject root = doc.object();
-        QJsonArray modelsArray = root["models"].toArray();
-
-        for (const QJsonValue &value : modelsArray) {
-            QJsonObject modelObj = value.toObject();
-
-            ModelInfo info;
-            info.modelName = modelObj["name"].toString();
-            info.provider = modelObj["provider"].toString();
-            info.description = modelObj["description"].toString();
-            info.capability = modelObj["capability"].toString();
-            info.isAvailable = modelObj["isAvailable"].toBool();
-
-            // Parse deploy type
-            QString deployTypeStr = modelObj["deployType"].toString();
-            if (deployTypeStr == "Local") {
-                info.deployType = DeployType::Local;
-            } else if (deployTypeStr == "Cloud") {
-                info.deployType = DeployType::Cloud;
-            } else {
-                info.deployType = DeployType::Custom;
-            }
-
-            // Parse parameters
-            QJsonObject paramsObj = modelObj["parameters"].toObject();
-            for (auto it = paramsObj.begin(); it != paramsObj.end(); ++it) {
-                info.parameters[it.key()] = it.value().toVariant();
-            }
-
-            models.append(info);
-        }
-
-        return models;
-    }
-
     // Helper function to convert single JSON object to ModelInfo
     ModelInfo parseModelFromJson(const QString &jsonStr) {
         ModelInfo info;
@@ -113,6 +68,35 @@ namespace {
         }
 
         return info;
+    }
+
+    // Helper function to convert JSON string to ModelInfo list
+    QList<ModelInfo> parseModelsFromJson(const QString &jsonStr) {
+        QList<ModelInfo> models;
+
+        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
+        if (!doc.isObject()) {
+            qCWarning(dtkaiModelManager) << "Invalid JSON response from daemon";
+            return models;
+        }
+
+        QJsonObject root = doc.object();
+        QJsonArray modelsArray = root["models"].toArray();
+
+        for (const QJsonValue &value : modelsArray) {
+            QJsonObject modelObj = value.toObject();
+            
+            // Convert single model object to JSON string and parse using existing function
+            QJsonDocument modelDoc(modelObj);
+            QString modelJsonStr = modelDoc.toJson(QJsonDocument::Compact);
+            ModelInfo info = parseModelFromJson(modelJsonStr);
+            
+            if (!info.modelName.isEmpty()) {
+                models.append(info);
+            }
+        }
+
+        return models;
     }
 }
 
