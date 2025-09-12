@@ -20,6 +20,7 @@ static constexpr int REQ_TIMEOUT = 30000;
 
 DImageRecognitionPrivate::DImageRecognitionPrivate(DImageRecognition *parent)
     : QObject(parent)
+    , error(NoError, "")
     , q(parent)
 {
 }
@@ -103,7 +104,7 @@ QString DImageRecognition::recognizeImage(const QString &imagePath, const QStrin
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->imageIfs->recognizeImage(imagePath, prompt, d->packageParams(params));
     
@@ -143,7 +144,7 @@ QString DImageRecognition::recognizeImageData(const QByteArray &imageData, const
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->imageIfs->recognizeImageData(imageData, prompt, d->packageParams(params));
     
@@ -183,7 +184,7 @@ QString DImageRecognition::recognizeImageUrl(const QString &imageUrl, const QStr
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->imageIfs->recognizeImageUrl(imageUrl, prompt, d->packageParams(params));
     

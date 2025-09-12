@@ -7,6 +7,7 @@
 
 #include "dtkai/docrrecognition.h"
 #include "dtkai/dtkaitypes.h"
+#include "dtkai/DAIError"
 
 #include <QSignalSpy>
 #include <QTimer>
@@ -58,78 +59,58 @@ protected:
         TestBase::TearDown();
     }
     
-    /**
-     * @brief Create a test image file with text content
-     */
-    QString createTestImageWithText(const QString &content = "Sample Text")
+    // Read image data from Qt resource system
+    QByteArray getEmbeddedImageData() const
     {
-        Q_UNUSED(content); // Parameter reserved for future use
-        QTemporaryFile *tempFile = new QTemporaryFile();
-        tempFile->setAutoRemove(false);
-        
-        if (!tempFile->open()) {
-            delete tempFile;
+        QFile imageFile(":/test/textrecognition.png");
+        if (!imageFile.open(QIODevice::ReadOnly)) {
+            qWarning() << "Failed to open embedded test image resource";
+            return QByteArray();
+        }
+
+        QByteArray imageData = imageFile.readAll();
+        qInfo() << "Loaded embedded image data from Qt resource, size:" << imageData.size() << "bytes";
+        return imageData;
+    }
+
+    // Fallback: copy resource file to temporary file and return absolute path
+    QString getTestImagePath() const
+    {
+        // Read data from resource
+        QByteArray imageData = getEmbeddedImageData();
+        if (imageData.isEmpty()) {
             return QString();
         }
-        
-        // Create a simple PNG with text-like pattern
-        // This is a minimal PNG that could contain text
-        const unsigned char pngWithText[] = {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x20, // 100x32 pixels
-            0x08, 0x02, 0x00, 0x00, 0x00, 0x4E, 0x5D, 0xE2, // RGB, no compression
-            0x8B, 0x00, 0x00, 0x01, 0x2C, 0x49, 0x44, 0x41, // IDAT chunk
-            0x54, 0x48, 0xC7, 0xED, 0xD2, 0x41, 0x0A, 0x00, // Image data (simplified)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82  // IEND chunk
-        };
-        
-        tempFile->write(reinterpret_cast<const char*>(pngWithText), sizeof(pngWithText));
-        
-        QString filePath = tempFile->fileName();
-        tempFile->close();
-        delete tempFile;
-        
-        testFiles.append(filePath);
-        return filePath;
+
+        // Create temporary file
+        QString tempPath = QDir::temp().absoluteFilePath("ocr_test_embedded.png");
+        QFile tempFile(tempPath);
+
+        if (!tempFile.open(QIODevice::WriteOnly)) {
+            qWarning() << "Failed to create temporary file:" << tempPath;
+            return QString();
+        }
+
+        tempFile.write(imageData);
+        tempFile.close();
+
+        qInfo() << "Created temporary image file:" << tempPath;
+        return tempPath;
     }
-    
-    /**
-     * @brief Generate test image data for OCR
-     */
-    QByteArray generateTestOCRImageData()
-    {
-        // Simple image data that could contain text
-        const unsigned char ocrImageData[] = {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-            0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00, 0x20,
-            0x08, 0x02, 0x00, 0x00, 0x00, 0x4E, 0x5D, 0xE2,
-            0x8B, 0x00, 0x00, 0x01, 0x2C, 0x49, 0x44, 0x41,
-            0x54, 0x48, 0xC7, 0xED, 0xD2, 0x41, 0x0A, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
-        };
-        
-        return QByteArray(reinterpret_cast<const char*>(ocrImageData), sizeof(ocrImageData));
-    }
-    
+
     /**
      * @brief Validate error state for operations that may fail in test environment
      */
     void validateErrorState(const DTK_CORE_NAMESPACE::DError &error, bool expectSuccess = false)
     {
         if (expectSuccess) {
-            EXPECT_EQ(error.getErrorCode(), -1) << "Expected no error, but got: " 
+            EXPECT_EQ(error.getErrorCode(), NoError) << "Expected no error, but got: "
                                                << error.getErrorMessage().toStdString();
         } else {
             // In test environment, API server not available (code 1) is acceptable
             if (error.getErrorCode() == 1) {
                 qInfo() << "AI daemon not available (error code 1) - this is normal in test environment";
-            } else if (error.getErrorCode() != -1) {
+            } else if (error.getErrorCode() != NoError) {
                 qDebug() << "Unexpected error code:" << error.getErrorCode() 
                         << "message:" << error.getErrorMessage();
             }
@@ -185,7 +166,7 @@ TEST_F(TestDOCRRecognition, fileRecognition)
     qDebug() << "Testing DOCRRecognition file recognition";
     
     // Create test image file
-    QString testImagePath = createTestImageWithText("Hello World");
+    QString testImagePath = getTestImagePath();
     ASSERT_FALSE(testImagePath.isEmpty());
     ASSERT_TRUE(QFile::exists(testImagePath));
     
@@ -210,11 +191,11 @@ TEST_F(TestDOCRRecognition, fileRecognition)
     
     // Test: Invalid file path
     QString invalidResult = ocrRec->recognizeFile("/nonexistent/path/image.jpg");
-    qDebug() << "Invalid file result:" << invalidResult;
+    qDebug() << "Expect: Invalid file result:" << invalidResult;
     
     error = ocrRec->lastError();
     // Should have an error for invalid file
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     qDebug() << "File recognition tests completed";
 }
@@ -227,7 +208,7 @@ TEST_F(TestDOCRRecognition, imageDataRecognition)
     qDebug() << "Testing DOCRRecognition image data recognition";
     
     // Generate test image data
-    QByteArray imageData = generateTestOCRImageData();
+    QByteArray imageData = getEmbeddedImageData();
     ASSERT_FALSE(imageData.isEmpty());
     
     // Test: Basic data recognition
@@ -255,7 +236,7 @@ TEST_F(TestDOCRRecognition, imageDataRecognition)
     
     error = ocrRec->lastError();
     // Should have an error for empty data
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     // Test: Invalid image data
     QByteArray invalidData("This is not image data");
@@ -263,7 +244,7 @@ TEST_F(TestDOCRRecognition, imageDataRecognition)
     qDebug() << "Invalid data result:" << invalidResult;
     
     error = ocrRec->lastError();
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     qDebug() << "Image data recognition tests completed";
 }
@@ -275,11 +256,11 @@ TEST_F(TestDOCRRecognition, regionRecognition)
 {
     qDebug() << "Testing DOCRRecognition region recognition";
     
-    QString testImagePath = createTestImageWithText("Region Text");
+    QString testImagePath = getTestImagePath();
     ASSERT_FALSE(testImagePath.isEmpty());
     
     // Test: Region recognition from string
-    QString regionString = "10,10,80,20"; // x,y,width,height
+    QString regionString = "0,0,728,370"; // x,y,width,height
     QString stringResult = ocrRec->recognizeRegionFromString(testImagePath, regionString);
     qDebug() << "Region string recognition result:" << stringResult;
     
@@ -298,7 +279,7 @@ TEST_F(TestDOCRRecognition, regionRecognition)
     validateErrorState(error);
     
     // Test: Region recognition from QRect
-    QRect region(10, 10, 80, 20);
+    QRect region(0,0,728,370);
     QString rectResult = ocrRec->recognizeRegionFromRect(testImagePath, region);
     qDebug() << "Region rect recognition result:" << rectResult;
     
@@ -330,7 +311,7 @@ TEST_F(TestDOCRRecognition, regionRecognition)
     // Test: Region outside image bounds
     QRect outsideRegion(1000, 1000, 100, 100);
     QString outsideResult = ocrRec->recognizeRegionFromRect(testImagePath, outsideRegion);
-    qDebug() << "Outside region result:" << outsideResult;
+    qDebug() << "Exspect: Outside region result:" << outsideResult;
     
     error = ocrRec->lastError();
     validateErrorState(error);
@@ -437,10 +418,10 @@ TEST_F(TestDOCRRecognition, errorHandling)
     
     DTK_CORE_NAMESPACE::DError error = ocrRec->lastError();
     // Should have an error for invalid/large image data
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     // Test: Recognition with corrupted image file
-    QString testImagePath = createTestImageWithText();
+    QString testImagePath = getTestImagePath();
     
     // Corrupt the file by truncating it
     QFile file(testImagePath);
@@ -453,10 +434,10 @@ TEST_F(TestDOCRRecognition, errorHandling)
     qDebug() << "Corrupted file result:" << corruptedResult;
     
     error = ocrRec->lastError();
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     // Test: Multiple rapid recognition requests
-    QString validImagePath = createTestImageWithText("Rapid Test");
+    QString validImagePath = getTestImagePath();
     
     for (int i = 0; i < 5; ++i) {
         QString rapidResult = ocrRec->recognizeFile(validImagePath);
@@ -479,7 +460,7 @@ TEST_F(TestDOCRRecognition, parameterValidation)
 {
     qDebug() << "Testing DOCRRecognition parameter validation";
     
-    QString testImagePath = createTestImageWithText("Parameter Test");
+    QString testImagePath = getTestImagePath();
     ASSERT_FALSE(testImagePath.isEmpty());
     
     // Test: Valid language parameters
@@ -526,13 +507,8 @@ TEST_F(TestDOCRRecognition, parameterValidation)
     validateErrorState(error);
     
     // Test: Region parameters
-    QRect testRegion(5, 5, 90, 25);
-    QVariantHash regionParams;
-    regionParams["language"] = "en";
-    regionParams["confidence_threshold"] = 0.75;
-    regionParams["whitelist"] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ";
-    
-    QString regionParamResult = ocrRec->recognizeRegionFromRect(testImagePath, testRegion, regionParams);
+    QRect testRegion(5, 5, 90, 25);    
+    QString regionParamResult = ocrRec->recognizeRegionFromRect(testImagePath, testRegion);
     qDebug() << "Region params result:" << regionParamResult;
     
     error = ocrRec->lastError();

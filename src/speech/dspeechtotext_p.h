@@ -8,6 +8,8 @@
 #include "dspeechtotext.h"
 #include "aidaemon_apisession_speechtotext.h"
 
+#include <QJsonDocument>
+
 DAI_BEGIN_NAMESPACE
 
 class DSpeechToTextPrivate : public QObject
@@ -18,6 +20,9 @@ public:
     ~DSpeechToTextPrivate();
     bool ensureServer();
     static QString packageParams(const QVariantHash &params);
+    
+    // JSON response parsing function
+    static QString parseRecognitionResult(const QString &jsonResult, DTK_CORE_NAMESPACE::DError *error = nullptr);
     
 public Q_SLOTS:
     void onRecognitionResult(const QString &streamSessionId, const QString &text);

@@ -54,42 +54,6 @@ TextToSpeechTest::~TextToSpeechTest()
     qDebug() << "TextToSpeechTest destructor";
 }
 
-void TextToSpeechTest::testSynthesis()
-{
-    qDebug() << "Testing text synthesis...";
-    
-    // Get supported voices
-    QStringList voices = tts->getSupportedVoices();
-    qDebug() << "Supported voices:" << voices;
-    
-    // Test text synthesis
-    QString testText = "这是一个语音合成测试，Hello World!";
-    QVariantHash params;
-    params["voice"] = "x4_yezi";
-    params["speed"] = 50;
-    params["volume"] = 50;
-    params["pitch"] = 50;
-    
-    qDebug() << "Synthesizing text:" << testText;
-    QByteArray audioData = tts->synthesizeText(testText, params);
-    
-    if (!audioData.isEmpty()) {
-        qDebug() << "Synthesis successful, audio data size:" << audioData.size();
-        
-        // Save audio data to file
-        QFile file("synthesized_audio.pcm");
-        if (file.open(QIODevice::WriteOnly)) {
-            file.write(audioData);
-            file.close();
-            qDebug() << "Audio data saved to synthesized_audio.pcm";
-        } else {
-            qDebug() << "Failed to save audio data to file";
-        }
-    } else {
-        qDebug() << "Synthesis failed:" << tts->lastError().getErrorMessage();
-    }
-}
-
 void TextToSpeechTest::testStreamSynthesis()
 {
     qDebug() << "Testing stream synthesis...";
@@ -179,10 +143,6 @@ int main(int argc, char *argv[])
     qDebug() << "About to create TextToSpeechTest instance";
     TextToSpeechTest test;
     qDebug() << "TextToSpeechTest instance created";
-    
-    // Test basic synthesis
-    qDebug() << "Testing basic synthesis mode...";
-    test.testSynthesis();
     
     // Wait a bit before testing stream synthesis
     QTimer::singleShot(2000, [&test]() {

@@ -22,7 +22,6 @@ protected:
     void SetUp() override
     {
         TestBase::SetUp();
-        qDebug() << "Setting up basic interfaces test";
     }
 };
 

@@ -15,7 +15,9 @@ DAI_USE_NAMESPACE
 #define CHAT_TIMEOUT 30 * 1000  
 #define REQ_TIMEOUT  10 * 1000
 
-DFunctionCallingPrivate::DFunctionCallingPrivate(DFunctionCalling *parent) : q(parent)
+DFunctionCallingPrivate::DFunctionCallingPrivate(DFunctionCalling *parent)
+    : error(NoError, "")
+    , q(parent)
 {
 
 }
@@ -103,7 +105,7 @@ QString DFunctionCalling::parse(const QString &prompt, const QString &functions,
             auto jObj = QJsonObject::fromVariantHash(var.value("function").value<QVariantHash>());
             QJsonDocument doc(jObj);
             ret = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
-            d->error = DError(0, "");
+            d->error = DError(NoError, "");
         }
     }
 

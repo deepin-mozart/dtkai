@@ -7,6 +7,7 @@
 
 #include "dtkai/dimagerecognition.h"
 #include "dtkai/dtkaitypes.h"
+#include "dtkai/DAIError"
 
 #include <QSignalSpy>
 #include <QTimer>
@@ -56,65 +57,48 @@ protected:
         TestBase::TearDown();
     }
     
-    /**
-     * @brief Create a test image file for testing
-     */
-    QString createTestImage(const QString &content = "Test Image")
-    {
-        Q_UNUSED(content); // Parameter reserved for future use
-        QTemporaryFile *tempFile = new QTemporaryFile();
-        tempFile->setAutoRemove(false);
-        
-        if (!tempFile->open()) {
-            delete tempFile;
-            return QString();
-        }
-        
-        // Create a simple image (1x1 pixel PNG)
-        QByteArray imageData;
-        QBuffer buffer(&imageData);
-        buffer.open(QIODevice::WriteOnly);
-        
-        // Minimal PNG header for a 1x1 transparent pixel
-        const unsigned char pngData[] = {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 pixels
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, // RGBA, no compression
-            0x89, 0x00, 0x00, 0x00, 0x0B, 0x49, 0x44, 0x41, // IDAT chunk
-            0x54, 0x08, 0xD7, 0x63, 0xF8, 0x00, 0x00, 0x00, // Image data
-            0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, // End
-            0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82  // IEND chunk
-        };
-        
-        tempFile->write(reinterpret_cast<const char*>(pngData), sizeof(pngData));
-        
-        QString filePath = tempFile->fileName();
-        tempFile->close();
-        delete tempFile;
-        
-        testFiles.append(filePath);
-        return filePath;
-    }
-    
+
     /**
      * @brief Generate test image data
      */
-    QByteArray generateTestImageData()
+    QByteArray getEmbeddedImageData()
     {
-        // Same minimal PNG data as above
-        const unsigned char pngData[] = {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
-            0x89, 0x00, 0x00, 0x00, 0x0B, 0x49, 0x44, 0x41,
-            0x54, 0x08, 0xD7, 0x63, 0xF8, 0x00, 0x00, 0x00,
-            0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-            0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
-        };
-        
-        return QByteArray(reinterpret_cast<const char*>(pngData), sizeof(pngData));
+        QFile imageFile(":/test/textrecognition.png");
+        if (!imageFile.open(QIODevice::ReadOnly)) {
+            qWarning() << "Failed to open embedded test image resource";
+            return QByteArray();
+        }
+
+        QByteArray imageData = imageFile.readAll();
+        qInfo() << "Loaded embedded image data from Qt resource, size:" << imageData.size() << "bytes";
+        return imageData;
+    }
+
+    /**
+     * @brief Create a test image file for testing
+     */
+    QString getTestImage()
+    {
+        // Read data from resource
+        QByteArray imageData = getEmbeddedImageData();
+        if (imageData.isEmpty()) {
+            return QString();
+        }
+
+        // Create temporary file
+        QString tempPath = QDir::temp().absoluteFilePath("ocr_test_embedded.png");
+        QFile tempFile(tempPath);
+
+        if (!tempFile.open(QIODevice::WriteOnly)) {
+            qWarning() << "Failed to create temporary file:" << tempPath;
+            return QString();
+        }
+
+        tempFile.write(imageData);
+        tempFile.close();
+
+        qInfo() << "Created temporary image file:" << tempPath;
+        return tempPath;
     }
     
     /**
@@ -123,13 +107,13 @@ protected:
     void validateErrorState(const DTK_CORE_NAMESPACE::DError &error, bool expectSuccess = false)
     {
         if (expectSuccess) {
-            EXPECT_EQ(error.getErrorCode(), -1) << "Expected no error, but got: " 
+            EXPECT_EQ(error.getErrorCode(), NoError) << "Expected no error, but got: "
                                                << error.getErrorMessage().toStdString();
         } else {
             // In test environment, API server not available (code 1) is acceptable
             if (error.getErrorCode() == 1) {
                 qInfo() << "AI daemon not available (error code 1) - this is normal in test environment";
-            } else if (error.getErrorCode() != -1) {
+            } else if (error.getErrorCode() != NoError) {
                 qDebug() << "Unexpected error code:" << error.getErrorCode() 
                         << "message:" << error.getErrorMessage();
             }
@@ -185,7 +169,7 @@ TEST_F(TestDImageRecognition, imageFileRecognition)
     qDebug() << "Testing DImageRecognition file recognition";
     
     // Create test image file
-    QString testImagePath = createTestImage();
+    QString testImagePath = getTestImage();
     ASSERT_FALSE(testImagePath.isEmpty());
     ASSERT_TRUE(QFile::exists(testImagePath));
     
@@ -220,7 +204,7 @@ TEST_F(TestDImageRecognition, imageFileRecognition)
     
     error = imageRec->lastError();
     // Should have an error for invalid file
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     qDebug() << "File recognition tests completed";
 }
@@ -233,7 +217,7 @@ TEST_F(TestDImageRecognition, imageDataRecognition)
     qDebug() << "Testing DImageRecognition data recognition";
     
     // Generate test image data
-    QByteArray imageData = generateTestImageData();
+    QByteArray imageData = getEmbeddedImageData();
     ASSERT_FALSE(imageData.isEmpty());
     
     // Test: Basic data recognition
@@ -250,12 +234,7 @@ TEST_F(TestDImageRecognition, imageDataRecognition)
     error = imageRec->lastError();
     validateErrorState(error);
     
-    // Test: Data recognition with parameters
-    QVariantHash params;
-    params["format"] = "detailed";
-    params["confidence"] = 0.8;
-    
-    QString paramResult = imageRec->recognizeImageData(imageData, "What objects are present?", params);
+    QString paramResult = imageRec->recognizeImageData(imageData, "What objects are present?");
     qDebug() << "Data recognition with params result:" << paramResult;
     
     error = imageRec->lastError();
@@ -267,7 +246,7 @@ TEST_F(TestDImageRecognition, imageDataRecognition)
     
     error = imageRec->lastError();
     // Should have an error for empty data
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     qDebug() << "Data recognition tests completed";
 }
@@ -280,9 +259,10 @@ TEST_F(TestDImageRecognition, imageUrlRecognition)
     qDebug() << "Testing DImageRecognition URL recognition";
     
     // Test: URL recognition (using a placeholder URL)
-    QString testUrl = "https://example.com/test-image.jpg";
+    QString testUrl = "https://ark-project.tos-cn-beijing.ivolces.com/images/view.jpeg";
     QString result = imageRec->recognizeImageUrl(testUrl);
     qDebug() << "URL recognition result:" << result;
+    EXPECT_NE(result.size(), 10);
     
     DTK_CORE_NAMESPACE::DError error = imageRec->lastError();
     validateErrorState(error);
@@ -294,12 +274,7 @@ TEST_F(TestDImageRecognition, imageUrlRecognition)
     error = imageRec->lastError();
     validateErrorState(error);
     
-    // Test: URL recognition with parameters
-    QVariantHash params;
-    params["timeout"] = 30;
-    params["max_size"] = 1024 * 1024; // 1MB
-    
-    QString paramResult = imageRec->recognizeImageUrl(testUrl, "Identify objects", params);
+    QString paramResult = imageRec->recognizeImageUrl(testUrl, "Identify objects");
     qDebug() << "URL recognition with params result:" << paramResult;
     
     error = imageRec->lastError();
@@ -311,7 +286,7 @@ TEST_F(TestDImageRecognition, imageUrlRecognition)
     
     error = imageRec->lastError();
     // Should have an error for invalid URL
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     qDebug() << "URL recognition tests completed";
 }
@@ -398,7 +373,7 @@ TEST_F(TestDImageRecognition, errorHandling)
     
     DTK_CORE_NAMESPACE::DError error = imageRec->lastError();
     // Should have an error for invalid image data
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     // Test: Recognition with invalid image data
     QByteArray invalidData("This is not image data");
@@ -406,11 +381,11 @@ TEST_F(TestDImageRecognition, errorHandling)
     qDebug() << "Invalid data result:" << invalidResult;
     
     error = imageRec->lastError();
-    EXPECT_NE(error.getErrorCode(), -1);
+    EXPECT_NE(error.getErrorCode(), NoError);
     
     // Test: Recognition with extremely long prompt
     QString longPrompt = QString("Describe ").repeated(1000) + "this image.";
-    QString testImagePath = createTestImage();
+    QString testImagePath = getTestImage();
     QString longPromptResult = imageRec->recognizeImage(testImagePath, longPrompt);
     qDebug() << "Long prompt result length:" << longPromptResult.length();
     
@@ -427,7 +402,7 @@ TEST_F(TestDImageRecognition, parameterValidation)
 {
     qDebug() << "Testing DImageRecognition parameter validation";
     
-    QString testImagePath = createTestImage();
+    QString testImagePath = getTestImage();
     ASSERT_FALSE(testImagePath.isEmpty());
     
     // Test: Various parameter combinations

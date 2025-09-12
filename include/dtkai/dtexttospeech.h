@@ -25,9 +25,6 @@ public:
     explicit DTextToSpeech(QObject *parent = nullptr);
     ~DTextToSpeech();
     
-    // Text synthesis
-    QByteArray synthesizeText(const QString &text, const QVariantHash &params = {});
-    
     // Stream-based synthesis
     bool startStreamSynthesis(const QString &text, const QVariantHash &params = {});
     QByteArray endStreamSynthesis();

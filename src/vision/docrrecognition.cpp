@@ -20,6 +20,7 @@ static constexpr int REQ_TIMEOUT = 30000;
 DOCRRecognitionPrivate::DOCRRecognitionPrivate(DOCRRecognition *parent)
     : QObject(parent)
     , q(parent)
+    , error(NoError, "")
 {
 }
 
@@ -90,7 +91,7 @@ QString DOCRRecognition::recognizeFile(const QString &imageFile, const QVariantH
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->ocrIfs->recognizeFile(imageFile, d->packageParams(params));
     
@@ -130,7 +131,7 @@ QString DOCRRecognition::recognizeImage(const QByteArray &imageData, const QVari
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->ocrIfs->recognizeImage(imageData, d->packageParams(params));
     
@@ -175,7 +176,7 @@ QString DOCRRecognition::recognizeRegionFromString(const QString &imageFile, con
     
     QMutexLocker lk(&d->mtx);
     d->running = true;
-    d->error = DError();
+    d->error = DError(NoError, "");
     
     QString ret = d->ocrIfs->recognizeRegion(imageFile, region, d->packageParams(params));
     

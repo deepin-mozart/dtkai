@@ -17,6 +17,7 @@ DAI_USE_NAMESPACE
 
 DSpeechToTextPrivate::DSpeechToTextPrivate(DSpeechToText *parent)
     : QObject()
+    , error(NoError, "")
     , q(parent)
 {
 
@@ -76,6 +77,28 @@ QString DSpeechToTextPrivate::packageParams(const QVariantHash &params)
 
     QString ret = QString::fromUtf8(QJsonDocument::fromVariant(root).toJson(QJsonDocument::Compact));
     return ret;
+}
+
+QString DSpeechToTextPrivate::parseRecognitionResult(const QString &jsonResult, DError *error)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(jsonResult.toUtf8());
+    auto var = doc.object().toVariantHash();
+    int errorCode = var.value("error_code", NoError).toInt();
+    QString resultText;
+    
+    if (errorCode != NoError) {
+        if (error) {
+            *error = DError(errorCode, var.value("error_message").toString());
+        }
+        resultText = "";
+    } else {
+        resultText = var.value("text").toString();
+        if (error) {
+            *error = DError(NoError, "");
+        }
+    }
+    
+    return resultText;
 }
 
 void DSpeechToTextPrivate::onRecognitionResult(const QString &streamSessionId, const QString &text)
@@ -147,19 +170,8 @@ QString DSpeechToText::recognizeFile(const QString &audioFile, const QVariantHas
     d->speechIfs->setTimeout(RECOGNITION_TIMEOUT);
     QString ret = d->speechIfs->recognizeFile(audioFile, d->packageParams(params));
     d->speechIfs->setTimeout(REQ_TIMEOUT);
-    
-    {
-        QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8());
-        auto var = doc.object().toVariantHash();
-        int errorCode = var.value("error_code", 0).toInt();
-        if (errorCode != 0) {
-            d->error = DError(errorCode, var.value("error_message").toString());
-            ret = "";
-        } else {
-            ret = var.value("text").toString();
-            d->error = DError(0, "");
-        }
-    }
+
+    ret = DSpeechToTextPrivate::parseRecognitionResult(ret, &d->error);
 
     lk.relock();
     d->running = false;
@@ -207,6 +219,8 @@ QString DSpeechToText::endStreamRecognition()
         
     QString result = d->speechIfs->endStreamRecognition(d->currentStreamSessionId);
     d->currentStreamSessionId.clear();
+    
+    result = DSpeechToTextPrivate::parseRecognitionResult(result, &d->error);
     
     QMutexLocker lk(&d->mtx);
     d->running = false;

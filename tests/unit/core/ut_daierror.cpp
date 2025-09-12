@@ -23,7 +23,6 @@ protected:
     void SetUp() override
     {
         TestBase::SetUp();
-        qDebug() << "Setting up DAIError interface tests";
     }
     
     void TearDown() override
@@ -63,8 +62,6 @@ protected:
  */
 TEST_F(TestDAIError, errorCodeDefinitions)
 {
-    qInfo() << "Testing DAIError code definitions";
-    
     // Test: Validate all defined error codes
     EXPECT_NO_THROW({
         AIErrorCode noError = NoError;

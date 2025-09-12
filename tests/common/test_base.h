@@ -66,8 +66,6 @@ private:
             char **argv = nullptr;
             app = new QCoreApplication(argc, argv);
         }
-        
-        qDebug() << "Test environment setup completed";
     }
     
     void cleanupTestEnvironment()
