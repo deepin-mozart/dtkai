@@ -7,6 +7,7 @@
 
 #include "dtkai/dspeechtotext.h"
 #include "dtkai/dtkaitypes.h"
+#include "dtkai/DAIError"
 
 #include <QSignalSpy>
 #include <QTimer>
@@ -140,15 +141,15 @@ protected:
         
         // In test environment without AI daemon, error code 1 (APIServerNotAvailable) is expected
         if (expectedError) {
-            EXPECT_NE(error.getErrorCode(), -1) << "Expected an error to be set";
-            if (error.getErrorCode() != -1) {
+            EXPECT_NE(error.getErrorCode(), NoError) << "Expected an error to be set";
+            if (error.getErrorCode() != NoError) {
                 qDebug() << "Expected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
             }
         } else {
             // In test environment, we may get APIServerNotAvailable (code 1) which is acceptable
-            if (error.getErrorCode() == 1) {
+            if (error.getErrorCode() == APIServerNotAvailable) {
                 qDebug() << "Info: AI daemon not available (error code 1) - this is normal in test environment";
-            } else if (error.getErrorCode() != -1) {
+            } else if (error.getErrorCode() != NoError) {
                 qDebug() << "Warning: Unexpected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
             }
         }
@@ -247,7 +248,7 @@ TEST_F(TestDSpeechToText, fileRecognition)
         
         // Check if error was set for non-existent file
         auto error = stt->lastError();
-        if (error.getErrorCode() != -1 && error.getErrorCode() != 1) {
+        if (error.getErrorCode() != NoError && error.getErrorCode() != 1) {
             qDebug() << "Error for non-existent file:" << error.getErrorCode() << error.getErrorMessage();
         }
         
@@ -421,24 +422,6 @@ TEST_F(TestDSpeechToText, informationMethods)
         
     }) << "getSupportedFormats should work correctly";
     
-    // Test: Get provider information (commented out - method not yet implemented)
-    /*
-    EXPECT_NO_THROW({
-        QString providerInfo = stt->getProviderInfo();
-        
-        qDebug() << "Provider info:" << providerInfo;
-        
-        // Provider info may be empty in test environment
-        if (!providerInfo.isEmpty()) {
-            EXPECT_LT(providerInfo.length(), 1000) << "Provider info should be reasonable length";
-        } else {
-            qDebug() << "No provider info returned - may be normal in test environment";
-        }
-    });
-    */
-    
-    qDebug() << "getProviderInfo test skipped - method not yet implemented";
-    
     qInfo() << "Information methods tests completed";
 }
 
@@ -485,7 +468,7 @@ TEST_F(TestDSpeechToText, errorHandling)
             
             // Should handle invalid format gracefully
             auto error = stt->lastError();
-            if (error.getErrorCode() != -1 && error.getErrorCode() != 1) {
+            if (error.getErrorCode() != NoError && error.getErrorCode() != 1) {
                 qDebug() << "Error for invalid audio:" << error.getErrorCode() << error.getErrorMessage();
             }
         }
@@ -606,7 +589,7 @@ TEST_F(TestDSpeechToText, parameterValidation)
         
         // Check if invalid parameters caused an error
         auto error = stt->lastError();
-        if (error.getErrorCode() != -1 && error.getErrorCode() != 1) {
+        if (error.getErrorCode() != NoError && error.getErrorCode() != 1) {
             qDebug() << "Error for invalid params:" << error.getErrorCode() << error.getErrorMessage();
         }
         

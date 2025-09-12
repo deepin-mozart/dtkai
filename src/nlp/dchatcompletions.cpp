@@ -17,6 +17,7 @@ DAI_USE_NAMESPACE
 
 DChatCompletionsPrivate::DChatCompletionsPrivate(DChatCompletions *parent)
     : QObject()
+    , error(NoError, "")
     , q(parent)
 {
 
@@ -145,7 +146,7 @@ QString DChatCompletions::chat(const QString &prompt, const QList<ChatHistory> &
             d->error = DError(var.value("error").toInt(), var.value("errorMessage").toString());
         } else {
             ret = var.value("content").toString();
-            d->error = DError(0, "");
+            d->error = DError(NoError, "");
         }
     }
 

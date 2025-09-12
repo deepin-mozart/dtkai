@@ -17,6 +17,7 @@ DAI_USE_NAMESPACE
 
 DTextToSpeechPrivate::DTextToSpeechPrivate(DTextToSpeech *parent)
     : QObject()
+    , error(NoError, "")
     , q(parent)
 {
 
@@ -119,45 +120,6 @@ DTextToSpeech::DTextToSpeech(QObject *parent)
 DTextToSpeech::~DTextToSpeech()
 {
 
-}
-
-QByteArray DTextToSpeech::synthesizeText(const QString &text, const QVariantHash &params)
-{
-    QMutexLocker lk(&d->mtx);
-    if (d->running)
-        return QByteArray();
-
-    if (!d->ensureServer()) {
-        d->error = DError(AIErrorCode::APIServerNotAvailable, "");
-        return QByteArray();
-    }
-
-    d->running = true;
-    lk.unlock();
-
-    d->ttsIfs->setTimeout(SYNTHESIS_TIMEOUT);
-    QString taskId = d->ttsIfs->synthesizeText(text, d->packageParams(params));
-    d->ttsIfs->setTimeout(REQ_TIMEOUT);
-    
-    // For now, we'll return empty data since synthesis is asynchronous
-    // In a real implementation, we would wait for the synthesis result
-    QByteArray result;
-    
-    {
-        QJsonDocument doc = QJsonDocument::fromJson(taskId.toUtf8());
-        auto var = doc.object().toVariantHash();
-        int errorCode = var.value("error_code", 0).toInt();
-        if (errorCode != 0) {
-            d->error = DError(errorCode, var.value("error_message").toString());
-            result = QByteArray();
-        } else {
-            d->error = DError(0, "");
-        }
-    }
-
-    lk.relock();
-    d->running = false;
-    return result;
 }
 
 bool DTextToSpeech::startStreamSynthesis(const QString &text, const QVariantHash &params)

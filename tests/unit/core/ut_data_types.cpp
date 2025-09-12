@@ -30,7 +30,6 @@ protected:
     void SetUp() override
     {
         TestBase::SetUp();
-        qDebug() << "Setting up data types serialization tests";
     }
     
     void TearDown() override

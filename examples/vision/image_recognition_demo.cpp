@@ -11,6 +11,7 @@
  */
 #include <DAIError>
 #include <DImageRecognition>
+#include <DError>
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -65,7 +66,7 @@ private:
         QStringList formats = imageRecognition->getSupportedImageFormats();
         auto error = imageRecognition->lastError();
         
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qWarning() << "✗ 获取支持格式失败:" << error.getErrorCode() << error.getErrorMessage();
         } else {
             qInfo() << "✓ 支持的图像格式:" << formats;
@@ -75,7 +76,7 @@ private:
         int maxSize = imageRecognition->getMaxImageSize();
         error = imageRecognition->lastError();
         
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qWarning() << "✗ 获取最大图像尺寸失败:" << error.getErrorCode() << error.getErrorMessage();
         } else {
             qInfo() << "✓ 最大图像尺寸:" << maxSize << "bytes (" << (maxSize / 1024 / 1024) << "MB)";
@@ -99,7 +100,7 @@ private:
         QString result = imageRecognition->recognizeImageUrl(imageUrl, prompt);
         auto error = imageRecognition->lastError();
         
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qWarning() << "✗ 图像识别失败:" << error.getErrorCode() << error.getErrorMessage();
             
             // Print detailed error information

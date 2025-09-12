@@ -23,7 +23,7 @@ file(GLOB_RECURSE TEST_FILES
 )
 
 # Create test executable
-add_executable(${BIN_NAME} ${TEST_FILES})
+add_executable(${BIN_NAME} ${TEST_FILES} test_resources.qrc)
 
 # Include directories
 target_include_directories(${BIN_NAME} PRIVATE

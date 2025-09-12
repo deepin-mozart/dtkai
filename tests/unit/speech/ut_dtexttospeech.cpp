@@ -7,6 +7,7 @@
 
 #include "dtkai/dtexttospeech.h"
 #include "dtkai/dtkaitypes.h"
+#include "dtkai/DAIError"
 
 #include <QSignalSpy>
 #include <QTimer>
@@ -53,7 +54,7 @@ protected:
     QVariantHash createSampleSpeechParameters()
     {
         QVariantHash params;
-        params["voice"] = "zh-CN-female";
+        params["voice"] = "x4_yezi";
         params["speed"] = 1.0;
         params["pitch"] = 1.0;
         params["volume"] = 1.0;
@@ -108,15 +109,15 @@ protected:
         
         // In test environment without AI daemon, error code 1 (APIServerNotAvailable) is expected
         if (expectedError) {
-            EXPECT_NE(error.getErrorCode(), -1) << "Expected an error to be set";
-            if (error.getErrorCode() != -1) {
+            EXPECT_NE(error.getErrorCode(), NoError) << "Expected an error to be set";
+            if (error.getErrorCode() != NoError) {
                 qDebug() << "Expected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
             }
         } else {
             // In test environment, we may get APIServerNotAvailable (code 1) which is acceptable
-            if (error.getErrorCode() == 1) {
+            if (error.getErrorCode() == APIServerNotAvailable) {
                 qDebug() << "Info: AI daemon not available (error code 1) - this is normal in test environment";
-            } else if (error.getErrorCode() != -1) {
+            } else if (error.getErrorCode() != NoError) {
                 qDebug() << "Warning: Unexpected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
             }
         }
@@ -159,84 +160,6 @@ TEST_F(TestDTextToSpeech, constructorDestructor)
     validateErrorState(false);
     
     qInfo() << "Constructor/destructor tests completed";
-}
-
-/**
- * @brief Test text synthesis functionality
- * 
- * This test verifies that text synthesis works correctly
- * with various texts and parameters.
- */
-TEST_F(TestDTextToSpeech, textSynthesis)
-{
-    qInfo() << "Testing DTextToSpeech text synthesis";
-    
-    // Test: Basic text synthesis without parameters
-    EXPECT_NO_THROW({
-        QString text = "Hello, this is a test of text to speech functionality.";
-        QByteArray audioData = tts->synthesizeText(text);
-        
-        qDebug() << "Basic synthesis result size:" << audioData.size();
-        validateAudioData(audioData);
-        validateErrorState(false);
-        
-    }) << "Basic text synthesis should work";
-    
-    // Test: Text synthesis with parameters
-    EXPECT_NO_THROW({
-        QString text = "这是一个中文语音合成测试。";
-        QVariantHash params = createSampleSpeechParameters();
-        
-        QByteArray audioData = tts->synthesizeText(text, params);
-        
-        qDebug() << "Synthesis with params result size:" << audioData.size();
-        validateAudioData(audioData);
-        validateErrorState(false);
-        
-    }) << "Text synthesis with parameters should work";
-    
-    // Test: Empty text handling
-    EXPECT_NO_THROW({
-        QString emptyText = "";
-        QByteArray audioData = tts->synthesizeText(emptyText);
-        
-        qDebug() << "Empty text synthesis result size:" << audioData.size();
-        
-        // Empty text should return empty audio or handle gracefully
-        if (audioData.isEmpty()) {
-            qDebug() << "Empty text returned empty audio - this is acceptable";
-        } else {
-            validateAudioData(audioData);
-        }
-        
-    }) << "Empty text should be handled gracefully";
-    
-    // Test: Long text synthesis
-    EXPECT_NO_THROW({
-        QString longText = "This is a very long text that should be synthesized into speech. "
-                          "It contains multiple sentences and should test the system's ability "
-                          "to handle longer input texts. The synthesis system should be able "
-                          "to process this text and generate appropriate audio output.";
-        
-        QByteArray audioData = tts->synthesizeText(longText);
-        
-        qDebug() << "Long text synthesis result size:" << audioData.size();
-        validateAudioData(audioData);
-        
-    }) << "Long text synthesis should work";
-    
-    // Test: Unicode text synthesis
-    EXPECT_NO_THROW({
-        QString unicodeText = "你好，世界！こんにちは、世界！안녕하세요, 세계! Bonjour le monde! 🌍✨";
-        
-        QByteArray audioData = tts->synthesizeText(unicodeText);
-        
-        qDebug() << "Unicode text synthesis result size:" << audioData.size();
-        validateAudioData(audioData);
-        
-    }) << "Unicode text synthesis should work";
-    
-    qInfo() << "Text synthesis tests completed";
 }
 
 /**
@@ -459,63 +382,7 @@ TEST_F(TestDTextToSpeech, informationMethods)
 TEST_F(TestDTextToSpeech, errorHandling)
 {
     qInfo() << "Testing DTextToSpeech error handling";
-    
-    // Test: Very long text handling
-    EXPECT_NO_THROW({
-        QString veryLongText = QString("Very long text. ").repeated(1000); // ~15KB of text
-        
-        QByteArray audioData = tts->synthesizeText(veryLongText);
-        
-        qDebug() << "Very long text synthesis result size:" << audioData.size();
-        
-        // Should handle long text gracefully
-        auto error = tts->lastError();
-        if (error.getErrorCode() != -1 && error.getErrorCode() != 1) {
-            qDebug() << "Error for very long text:" << error.getErrorCode() << error.getErrorMessage();
-        }
-        
-    }) << "Very long text should be handled gracefully";
-    
-    // Test: Special characters and symbols
-    EXPECT_NO_THROW({
-        QString specialText = "Special chars: @#$%^&*()[]{}|\\;':\"<>?/`~+=_-";
-        
-        QByteArray audioData = tts->synthesizeText(specialText);
-        
-        qDebug() << "Special chars synthesis result size:" << audioData.size();
-        
-        // Special characters should be handled (may be ignored or pronounced)
-        validateAudioData(audioData);
-        
-    }) << "Special characters should be handled gracefully";
-    
-    // Test: Numbers and mixed content
-    EXPECT_NO_THROW({
-        QString mixedText = "The year is 2024, and the temperature is 23.5°C. Call 123-456-7890.";
-        
-        QByteArray audioData = tts->synthesizeText(mixedText);
-        
-        qDebug() << "Mixed content synthesis result size:" << audioData.size();
-        validateAudioData(audioData);
-        
-    }) << "Mixed content with numbers should be handled";
-    
-    // Test: Multiple rapid synthesis requests
-    EXPECT_NO_THROW({
-        for (int i = 0; i < 5; ++i) {
-            QString text = QString("Rapid synthesis test number %1").arg(i);
-            QByteArray audioData = tts->synthesizeText(text);
-            
-            qDebug() << "Rapid synthesis" << i << "result size:" << audioData.size();
-            
-            // Small delay between requests
-            QTest::qWait(10);
-        }
-        
-        validateErrorState(false); // Rapid requests should not cause persistent errors
-        
-    }) << "Multiple rapid synthesis requests should be handled correctly";
-    
+
     // Test: Stream synthesis interruption
     EXPECT_NO_THROW({
         QString text = "This synthesis will be interrupted.";
@@ -532,122 +399,4 @@ TEST_F(TestDTextToSpeech, errorHandling)
     }) << "Stream synthesis interruption should be handled gracefully";
     
     qInfo() << "Error handling tests completed";
-}
-
-/**
- * @brief Test parameter validation and voice configuration
- * 
- * This test verifies that various parameter combinations
- * and voice settings are handled correctly.
- */
-TEST_F(TestDTextToSpeech, parameterValidation)
-{
-    qInfo() << "Testing DTextToSpeech parameter validation";
-    
-    // Test: Various voice parameters
-    QStringList voiceIds = {"zh-CN-female", "zh-CN-male", "en-US-female", "en-US-male"};
-    for (const QString &voiceId : voiceIds) {
-        EXPECT_NO_THROW({
-            QVariantHash params;
-            params["voice"] = voiceId;
-            
-            QString text = "Testing voice parameter.";
-            QByteArray audioData = tts->synthesizeText(text, params);
-            
-            qDebug() << "Voice" << voiceId << "result size:" << audioData.size();
-            validateAudioData(audioData);
-            
-        }) << "Voice parameter " << voiceId.toStdString() << " should be handled";
-    }
-    
-    // Test: Various speed settings
-    QList<double> speeds = {0.5, 0.8, 1.0, 1.2, 1.5, 2.0};
-    for (double speed : speeds) {
-        EXPECT_NO_THROW({
-            QVariantHash params;
-            params["speed"] = speed;
-            params["voice"] = "zh-CN-female";
-            
-            QString text = "Testing speech speed.";
-            QByteArray audioData = tts->synthesizeText(text, params);
-            
-            qDebug() << "Speed" << speed << "result size:" << audioData.size();
-            
-        }) << "Speed parameter " << speed << " should be handled";
-    }
-    
-    // Test: Various pitch settings
-    QList<double> pitches = {0.5, 0.8, 1.0, 1.2, 1.5};
-    for (double pitch : pitches) {
-        EXPECT_NO_THROW({
-            QVariantHash params;
-            params["pitch"] = pitch;
-            params["voice"] = "zh-CN-female";
-            
-            QString text = "Testing speech pitch.";
-            QByteArray audioData = tts->synthesizeText(text, params);
-            
-            qDebug() << "Pitch" << pitch << "result size:" << audioData.size();
-            
-        }) << "Pitch parameter " << pitch << " should be handled";
-    }
-    
-    // Test: Various volume settings
-    QList<double> volumes = {0.3, 0.5, 0.8, 1.0};
-    for (double volume : volumes) {
-        EXPECT_NO_THROW({
-            QVariantHash params;
-            params["volume"] = volume;
-            params["voice"] = "zh-CN-female";
-            
-            QString text = "Testing speech volume.";
-            QByteArray audioData = tts->synthesizeText(text, params);
-            
-            qDebug() << "Volume" << volume << "result size:" << audioData.size();
-            
-        }) << "Volume parameter " << volume << " should be handled";
-    }
-    
-    // Test: Complex parameter combinations
-    EXPECT_NO_THROW({
-        QVariantHash complexParams;
-        complexParams["voice"] = "zh-CN-female";
-        complexParams["speed"] = 1.2;
-        complexParams["pitch"] = 1.1;
-        complexParams["volume"] = 0.8;
-        complexParams["sample_rate"] = 22050;
-        complexParams["format"] = "wav";
-        complexParams["encoding"] = "pcm";
-        
-        QString text = "Complex parameter combination test.";
-        QByteArray audioData = tts->synthesizeText(text, complexParams);
-        
-        qDebug() << "Complex params result size:" << audioData.size();
-        validateAudioData(audioData);
-        
-    }) << "Complex parameter combinations should be handled";
-    
-    // Test: Invalid parameter values
-    EXPECT_NO_THROW({
-        QVariantHash invalidParams;
-        invalidParams["speed"] = -1.0;        // Invalid speed
-        invalidParams["pitch"] = 10.0;        // Extreme pitch
-        invalidParams["volume"] = -0.5;       // Invalid volume
-        invalidParams["voice"] = "";          // Empty voice
-        invalidParams["sample_rate"] = -1000; // Invalid sample rate
-        
-        QString text = "Invalid parameter test.";
-        QByteArray audioData = tts->synthesizeText(text, invalidParams);
-        
-        qDebug() << "Invalid params result size:" << audioData.size();
-        
-        // Check if invalid parameters caused an error
-        auto error = tts->lastError();
-        if (error.getErrorCode() != -1 && error.getErrorCode() != 1) {
-            qDebug() << "Error for invalid params:" << error.getErrorCode() << error.getErrorMessage();
-        }
-        
-    }) << "Invalid parameters should be handled gracefully";
-    
-    qInfo() << "Parameter validation tests completed";
 }

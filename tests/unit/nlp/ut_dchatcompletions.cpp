@@ -7,6 +7,7 @@
 
 #include "dtkai/dchatcompletions.h"
 #include "dtkai/dtkaitypes.h"
+#include "dtkai/DAIError"
 
 #include <QSignalSpy>
 #include <QTimer>
@@ -106,17 +107,16 @@ protected:
         // In test environment without AI daemon, error code 1 (APIServerNotAvailable) is expected
         // This is normal behavior and not a test failure
         if (expectedError) {
-            EXPECT_NE(error.getErrorCode(), -1) << "Expected an error to be set";
-            if (error.getErrorCode() != -1) {
+            EXPECT_NE(error.getErrorCode(), NoError) << "Expected an error to be set";
+            if (error.getErrorCode() != NoError) {
                 qDebug() << "Expected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
             }
         } else {
             // In test environment, we may get APIServerNotAvailable (code 1) which is acceptable
-            if (error.getErrorCode() == 1) {
+            if (error.getErrorCode() == APIServerNotAvailable) {
                 qDebug() << "Info: AI daemon not available (error code 1) - this is normal in test environment";
-            } else if (error.getErrorCode() != -1) {
+            } else if (error.getErrorCode() != NoError) {
                 qDebug() << "Warning: Unexpected error code:" << error.getErrorCode() << "message:" << error.getErrorMessage();
-                // Don't fail the test for daemon unavailability
             }
         }
     }
@@ -406,7 +406,7 @@ TEST_F(TestDChatCompletions, errorHandling)
         
         // Check if error was set for empty prompt
         auto error = chat->lastError();
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qDebug() << "Error for empty prompt:" << error.getErrorMessage();
         }
         
@@ -421,7 +421,7 @@ TEST_F(TestDChatCompletions, errorHandling)
         
         // Check if there was an error due to prompt length
         auto error = chat->lastError();
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qDebug() << "Error for long prompt:" << error.getErrorMessage();
         }
         
@@ -438,7 +438,7 @@ TEST_F(TestDChatCompletions, errorHandling)
         
         // Check if invalid parameters caused an error
         auto error = chat->lastError();
-        if (error.getErrorCode() != -1) {
+        if (error.getErrorCode() != NoError) {
             qDebug() << "Error for invalid parameters:" << error.getErrorMessage();
         }
         
