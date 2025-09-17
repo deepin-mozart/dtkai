@@ -321,3 +321,125 @@ TEST_F(TestDModelManager, errorHandling)
     
     qInfo() << "Error handling tests completed successfully";
 }
+
+/**
+ * @brief Test DModelManager::currentModelForCapability() static method
+ * 
+ * This test verifies that the currentModelForCapability method returns
+ * the currently selected model for a specific capability.
+ */
+TEST_F(TestDModelManager, currentModelForCapability)
+{
+    qInfo() << "Testing DModelManager::currentModelForCapability()";
+    
+    // Get supported capabilities first
+    QStringList supportedCapabilities = DModelManager::supportedCapabilities();
+    ASSERT_FALSE(supportedCapabilities.isEmpty()) << "Need supported capabilities for this test";
+    
+    // Test: Get current model for each supported capability
+    for (const QString &capability : supportedCapabilities) {
+        QString currentModel;
+        EXPECT_NO_THROW({
+            currentModel = DModelManager::currentModelForCapability(capability);
+        }) << "currentModelForCapability() should not throw for valid capability: " << capability.toStdString();
+        
+        // The current model can be empty if no model is configured for this capability
+        // But if it's not empty, it should be a valid string
+        if (!currentModel.isEmpty()) {
+            expectNonEmptyString(currentModel, "Current model name should not be empty if provided");
+            qInfo() << "Current model for capability" << capability << ":" << currentModel;
+        } else {
+            qInfo() << "No current model configured for capability:" << capability;
+        }
+    }
+    
+    // Test: Invalid capability
+    QString currentModel;
+    EXPECT_NO_THROW({
+        currentModel = DModelManager::currentModelForCapability("InvalidCapability123");
+    }) << "currentModelForCapability() should handle invalid capability gracefully";
+    
+    // Empty result is acceptable for invalid capability
+    qInfo() << "Current model for invalid capability:" << currentModel;
+    
+    // Test: Empty capability string
+    EXPECT_NO_THROW({
+        currentModel = DModelManager::currentModelForCapability("");
+    }) << "currentModelForCapability() should handle empty capability gracefully";
+    
+    EXPECT_TRUE(currentModel.isEmpty()) << "Empty capability should return empty model name";
+}
+
+/**
+ * @brief Test DModelManager::getProviderList() static method
+ * 
+ * This test verifies that the getProviderList method returns
+ * a valid list of AI model providers that the system supports.
+ */
+TEST_F(TestDModelManager, getProviderList)
+{
+    qInfo() << "Testing DModelManager::getProviderList()";
+    
+    // Test: Call the static method
+    QStringList providers;
+    EXPECT_NO_THROW({
+        providers = DModelManager::getProviderList();
+    }) << "getProviderList() should not throw exceptions";
+    
+    // Test: Log providers for debugging
+    qInfo() << "Available providers:" << providers;
+    
+    // Test: Verify no duplicates
+    QSet<QString> uniqueProviders = providers.toSet();
+    EXPECT_EQ(providers.size(), uniqueProviders.size())
+        << "Providers list should not contain duplicates";
+}
+
+/**
+ * @brief Test DModelManager::getModelsForProvider() static method
+ * 
+ * This test verifies that the getModelsForProvider method returns
+ * valid model information for specific providers.
+ */
+TEST_F(TestDModelManager, getModelsForProvider)
+{
+    qInfo() << "Testing DModelManager::getModelsForProvider()";
+    
+    // Get provider list first
+    QStringList providers = DModelManager::getProviderList();
+    
+    // Test: Get models for each provider
+    for (const QString &provider : providers) {
+        QList<ModelInfo> models;
+        EXPECT_NO_THROW({
+            models = DModelManager::getModelsForProvider(provider);
+        }) << "getModelsForProvider() should not throw for valid provider: " << provider.toStdString();
+        
+        qInfo() << "Found" << models.size() << "models for provider:" << provider;
+        
+        // Test: Validate each model
+        for (const ModelInfo &model : models) {
+            validateModelInfo(model, true);
+            
+            // Test: Model provider should match requested provider
+            EXPECT_EQ(model.provider, provider)
+                << "Model provider should match requested provider";
+        }
+    }
+    
+    // Test: Invalid provider
+    QList<ModelInfo> emptyModels;
+    EXPECT_NO_THROW({
+        emptyModels = DModelManager::getModelsForProvider("InvalidProvider_" + QString::number(QDateTime::currentMSecsSinceEpoch()));
+    }) << "getModelsForProvider() should handle invalid provider gracefully";
+    
+    // Empty result is acceptable for invalid provider
+    qInfo() << "Models for invalid provider:" << emptyModels.size();
+    
+    // Test: Empty provider string
+    EXPECT_NO_THROW({
+        emptyModels = DModelManager::getModelsForProvider("");
+    }) << "getModelsForProvider() should handle empty provider gracefully";
+    
+    qInfo() << "Models for empty provider:" << emptyModels.size();
+}

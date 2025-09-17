@@ -65,6 +65,29 @@ int main(int argc, char *argv[])
             qDebug() << "Model not found";
         }
     }
+
+    // Test 6: Test getProviderList
+     qDebug() << "\n6. Testing getProviderList";
+     QStringList providers = DModelManager::getProviderList();
+     qDebug() << "Providers:" << providers;
+
+     // Test 7: getModelsForProvider for each provider
+     qDebug() << "\n7. Testing getModelsForProvider";
+     for (const QString &provider : providers) {
+         qDebug() << "Provider:" << provider;
+         QList<ModelInfo> models = DModelManager::getModelsForProvider(provider);
+         qDebug() << "  Models count:" << models.size();
+         for (const ModelInfo &model : models) {
+             qDebug() << "    Model:" << model.modelName << "Capability:" << model.capability;
+         }
+     }
+
+     // Test 8: get selected model.
+     qDebug() << "\n8. get selected model. ---";
+     for (const QString &capability : capabilities) {
+         QString currentModel = DModelManager::currentModelForCapability(capability);
+         qDebug() << "AI capability:" << capability << " selected model:" << currentModel;
+     }
     
     qDebug() << "\n=== Test Complete ===";
     
