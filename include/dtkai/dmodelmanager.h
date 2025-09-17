@@ -42,6 +42,14 @@ public:
     static QList<ModelInfo> availableModels(const QString &capability);
     static QList<ModelInfo> availableModels(); // All models
     static ModelInfo modelInfo(const QString &modelName);
+    
+    // Get the currently selected model for a specific capability
+    static QString currentModelForCapability(const QString &capability);
+
+    // Get list of all available model providers
+    static QStringList getProviderList();
+    // Get list of models for a specific provider
+    static QList<ModelInfo> getModelsForProvider(const QString &provider);
 
 private:
     // Private constructor - static class only

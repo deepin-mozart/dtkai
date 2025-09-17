@@ -201,3 +201,59 @@ ModelInfo DModelManager::modelInfo(const QString &modelName)
 
     return info;
 }
+
+QString DModelManager::currentModelForCapability(const QString &capability)
+{
+    auto interface = getModelInfoInterface();
+    if (!interface || !interface->isValid()) {
+        qCWarning(dtkaiModelManager) << "ModelInfo D-Bus interface not available";
+        return QString();
+    }
+
+    QDBusReply<QString> reply = interface->GetCurrentModelForCapability(capability);
+    if (!reply.isValid()) {
+        qCWarning(dtkaiModelManager) << "Failed to get current model for capability" << capability
+                                    << ":" << reply.error().message();
+        return QString();
+    }
+
+    return reply.value();
+}
+
+QStringList DModelManager::getProviderList()
+{
+    auto interface = getModelInfoInterface();
+    if (!interface || !interface->isValid()) {
+        qCWarning(dtkaiModelManager) << "ModelInfo D-Bus interface not available";
+        return QStringList();
+    }
+
+    QDBusReply<QStringList> reply = interface->GetProviderList();
+    if (!reply.isValid()) {
+        qCWarning(dtkaiModelManager) << "Failed to get provider list:" 
+                                    << reply.error().message();
+        return QStringList();
+    }
+
+    return reply.value();
+}
+
+QList<ModelInfo> DModelManager::getModelsForProvider(const QString &provider)
+{
+    auto interface = getModelInfoInterface();
+    if (!interface || !interface->isValid()) {
+        qCWarning(dtkaiModelManager) << "ModelInfo D-Bus interface not available";
+        return QList<ModelInfo>();
+    }
+
+    QDBusReply<QString> reply = interface->GetModelsForProvider(provider);
+    if (!reply.isValid()) {
+        qCWarning(dtkaiModelManager) << "Failed to get models for provider" << provider
+                                    << ":" << reply.error().message();
+        return QList<ModelInfo>();
+    }
+
+    QList<ModelInfo> models = parseModelsFromJson(reply.value());
+    qCDebug(dtkaiModelManager) << "Found" << models.size() << "models for provider" << provider;
+    return models;
+}
