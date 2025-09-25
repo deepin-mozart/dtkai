@@ -67,28 +67,28 @@ TEST_F(TestDAIError, errorCodeDefinitions)
         AIErrorCode noError = NoError;
         AIErrorCode serverError = APIServerNotAvailable;
         AIErrorCode paramError = InvalidParameter;
-        AIErrorCode parseError = ParseError;
+        AIErrorCode responseParseError = ResponseParseError;
         
         // Validate error codes are in expected range
         validateErrorCode(static_cast<int>(noError));
         validateErrorCode(static_cast<int>(serverError));
         validateErrorCode(static_cast<int>(paramError));
-        validateErrorCode(static_cast<int>(parseError));
+        validateErrorCode(static_cast<int>(responseParseError));
         
         qDebug() << "NoError:" << noError;
         qDebug() << "APIServerNotAvailable:" << serverError;
         qDebug() << "InvalidParameter:" << paramError;
-        qDebug() << "ParseError:" << parseError;
+        qDebug() << "ResponseParseError:" << responseParseError;
         
     }) << "Error code definitions should be accessible";
     
     // Test: Error codes should have distinct values
     EXPECT_NE(NoError, APIServerNotAvailable);
     EXPECT_NE(NoError, InvalidParameter);
-    EXPECT_NE(NoError, ParseError);
+    EXPECT_NE(NoError, ResponseParseError);
     EXPECT_NE(APIServerNotAvailable, InvalidParameter);
-    EXPECT_NE(APIServerNotAvailable, ParseError);
-    EXPECT_NE(InvalidParameter, ParseError);
+    EXPECT_NE(APIServerNotAvailable, ResponseParseError);
+    EXPECT_NE(InvalidParameter, ResponseParseError);
     
     // Test: NoError should be 0 (standard convention)
     EXPECT_EQ(NoError, 0) << "NoError should be 0 by convention";
@@ -318,7 +318,7 @@ TEST_F(TestDAIError, dtkCoreIntegration)
         {NoError, "No error occurred"},
         {APIServerNotAvailable, "API server is not available"},
         {InvalidParameter, "Invalid parameter provided"},
-        {ParseError, "Failed to parse response"}
+        {ResponseParseError, "Failed to parse response"}
     };
     
     for (auto it = errorCodeMessages.begin(); it != errorCodeMessages.end(); ++it) {

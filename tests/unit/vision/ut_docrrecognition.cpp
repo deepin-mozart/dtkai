@@ -5,7 +5,7 @@
 #include "test_base.h"
 #include "test_utils.h"
 
-#include "dtkai/docrrecognition.h"
+#include "dtkai/vision/docrrecognition.h"
 #include "dtkai/dtkaitypes.h"
 #include "dtkai/DAIError"
 

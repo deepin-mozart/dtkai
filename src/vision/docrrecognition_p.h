@@ -5,7 +5,7 @@
 #ifndef DOCRRECOGNITION_P_H
 #define DOCRRECOGNITION_P_H
 
-#include "docrrecognition.h"
+#include "vision/docrrecognition.h"
 #include "aidaemon_apisession_ocr.h"
 
 #include <QObject>

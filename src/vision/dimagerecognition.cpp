@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dimagerecognition.h"
+#include "vision/dimagerecognition.h"
 #include "dimagerecognition_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
@@ -112,7 +112,7 @@ QString DImageRecognition::recognizeImage(const QString &imagePath, const QStrin
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }
@@ -152,7 +152,7 @@ QString DImageRecognition::recognizeImageData(const QByteArray &imageData, const
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }
@@ -192,7 +192,7 @@ QString DImageRecognition::recognizeImageUrl(const QString &imageUrl, const QStr
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }

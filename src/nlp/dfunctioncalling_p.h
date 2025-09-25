@@ -5,7 +5,7 @@
 #ifndef DFUNCTIONCALLING_P_H
 #define DFUNCTIONCALLING_P_H
 
-#include "dfunctioncalling.h"
+#include "nlp/dfunctioncalling.h"
 #include "aidaemon_apisession_functioncalling.h"
 
 DAI_BEGIN_NAMESPACE

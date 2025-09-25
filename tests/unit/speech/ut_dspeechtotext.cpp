@@ -5,7 +5,7 @@
 #include "test_base.h"
 #include "test_utils.h"
 
-#include "dtkai/dspeechtotext.h"
+#include "dtkai/speech/dspeechtotext.h"
 #include "dtkai/dtkaitypes.h"
 #include "dtkai/DAIError"
 

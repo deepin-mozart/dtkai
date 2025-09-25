@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dembeddingplatform.h"
+#include "nlp/dembeddingplatform.h"
 #include "dembeddingplatform_p.h"
 #include "daierror.h"
 
