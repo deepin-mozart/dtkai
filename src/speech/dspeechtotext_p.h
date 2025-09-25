@@ -5,7 +5,7 @@
 #ifndef DSPEECHTOTEXT_P_H
 #define DSPEECHTOTEXT_P_H
 
-#include "dspeechtotext.h"
+#include "speech/dspeechtotext.h"
 #include "aidaemon_apisession_speechtotext.h"
 
 #include <QJsonDocument>

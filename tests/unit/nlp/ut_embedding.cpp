@@ -5,7 +5,7 @@
 #include "test_base.h"
 #include "test_utils.h"
 
-#include "dtkai/dembeddingplatform.h"
+#include "dtkai/nlp/dembeddingplatform.h"
 #include "dtkai/dtkaitypes.h"
 #include "dtkai/daierror.h"
 

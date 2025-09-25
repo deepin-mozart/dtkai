@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dfunctioncalling_p.h"
+#include "nlp/dfunctioncalling.h"
+#include "nlp/dfunctioncalling_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
 

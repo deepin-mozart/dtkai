@@ -4,7 +4,9 @@
 
 set(BIN_NAME dtkai)
 
-file(GLOB_RECURSE INCLUDE_FILES "${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/*")
+set(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include/${BIN_NAME}")
+file(GLOB_RECURSE INCLUDE_FILES "${INCLUDE_DIR}/*.h")
+
 file(GLOB_RECURSE SRCS
     "*.h"
     "*.cpp"
@@ -38,7 +40,12 @@ add_library(${BIN_NAME} SHARED
     ${DBUS_FILES}
 )
 
-target_include_directories(${BIN_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/)
+target_include_directories(${BIN_NAME} PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/
+    ${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/nlp
+    ${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/speech
+    ${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/vision
+)
 
 set_target_properties(${BIN_NAME} PROPERTIES
     VERSION ${CMAKE_PROJECT_VERSION}

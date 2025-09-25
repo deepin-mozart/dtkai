@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "docrrecognition.h"
+#include "vision/docrrecognition.h"
 #include "docrrecognition_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
@@ -99,7 +99,7 @@ QString DOCRRecognition::recognizeFile(const QString &imageFile, const QVariantH
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }
@@ -139,7 +139,7 @@ QString DOCRRecognition::recognizeImage(const QByteArray &imageData, const QVari
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }
@@ -184,7 +184,7 @@ QString DOCRRecognition::recognizeRegionFromString(const QString &imageFile, con
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(ret.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError) {
-        d->error = DError(AIErrorCode::ParseError, error.errorString());
+        d->error = DError(AIErrorCode::ResponseParseError, error.errorString());
         d->running = false;
         return QString();
     }

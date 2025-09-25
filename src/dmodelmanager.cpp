@@ -83,7 +83,7 @@ namespace {
         QJsonObject root = doc.object();
         QJsonArray modelsArray = root["models"].toArray();
 
-        for (const QJsonValue &value : modelsArray) {
+        for (const QJsonValue value : modelsArray) {
             QJsonObject modelObj = value.toObject();
             
             // Convert single model object to JSON string and parse using existing function
@@ -123,7 +123,7 @@ QStringList DModelManager::supportedCapabilities()
 
     QStringList capabilities;
     QJsonArray array = doc.array();
-    for (const QJsonValue &value : array) {
+    for (const QJsonValue value : array) {
         capabilities.append(value.toString());
     }
 

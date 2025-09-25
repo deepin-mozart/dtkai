@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dchatcompletions_p.h"
+#include "nlp/dchatcompletions.h"
+#include "nlp/dchatcompletions_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
 

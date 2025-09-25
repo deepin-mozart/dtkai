@@ -5,7 +5,7 @@
 #ifndef DEMBEDDINGPLATFORM_P_H
 #define DEMBEDDINGPLATFORM_P_H
 
-#include "dembeddingplatform.h"
+#include "nlp/dembeddingplatform.h"
 #include <DObjectPrivate>
 
 DAI_BEGIN_NAMESPACE

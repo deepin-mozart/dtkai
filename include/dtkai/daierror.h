@@ -15,7 +15,7 @@ enum AIErrorCode {
     NoError = 0,
     APIServerNotAvailable = 1,
     InvalidParameter = 2,
-    ParseError = 3
+    ResponseParseError = 3
 };
 
 DAI_END_NAMESPACE

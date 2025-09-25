@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dspeechtotext_p.h"
+#include "speech/dspeechtotext.h"
+#include "speech/dspeechtotext_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
 

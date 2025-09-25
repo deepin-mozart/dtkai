@@ -5,7 +5,7 @@
 #ifndef DIMAGERECOGNITION_P_H
 #define DIMAGERECOGNITION_P_H
 
-#include "dimagerecognition.h"
+#include "vision/dimagerecognition.h"
 #include "aidaemon_apisession_imagerecognition.h"
 
 DAI_BEGIN_NAMESPACE

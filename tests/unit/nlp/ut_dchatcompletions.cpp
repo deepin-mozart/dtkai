@@ -5,7 +5,7 @@
 #include "test_base.h"
 #include "test_utils.h"
 
-#include "dtkai/dchatcompletions.h"
+#include "dtkai/nlp/dchatcompletions.h"
 #include "dtkai/dtkaitypes.h"
 #include "dtkai/DAIError"
 

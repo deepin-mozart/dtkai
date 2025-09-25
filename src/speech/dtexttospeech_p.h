@@ -5,7 +5,7 @@
 #ifndef DTEXTTOSPEECH_P_H
 #define DTEXTTOSPEECH_P_H
 
-#include "dtexttospeech.h"
+#include "speech/dtexttospeech.h"
 #include "aidaemon_apisession_texttospeech.h"
 
 DAI_BEGIN_NAMESPACE
